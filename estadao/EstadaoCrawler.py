@@ -27,9 +27,9 @@ class EstadaoCrawler:
 
     def CarregarTodasNoticias(self):
 
-        carregar_mais_display = WebDriverWait(self.driver, 10).until(
+        carregar_mais_display = WebDriverWait(self.driver, 30).until(
             EC.element_to_be_clickable((By.XPATH,
-            '/html/body/section[4]/div/section[1]/div/section[2]/div')))
+            '/html/body/section[3]/div/section[1]/div/section[2]/div')))
         carregar_mais_display=carregar_mais_display.value_of_css_property('display')
 
         while carregar_mais_display != 'none':
@@ -38,12 +38,12 @@ class EstadaoCrawler:
             self.driver.execute_script("arguments[0].click();", carregar_mais_botao)#
 
             try:
-                carregar_mais_display = WebDriverWait(self.driver, 5).until(
+                carregar_mais_display = WebDriverWait(self.driver, 30).until(
                 EC.element_to_be_clickable((By.CLASS_NAME,'btn-mais')))
                 carregar_mais_display=carregar_mais_display.value_of_css_property('display')
             except:
                 carregar_mais_display = self.driver.find_element(By.XPATH,
-                    '/html/body/section[4]/div/section[1]/div/section[2]/div')
+                    '/html/body/section[3]/div/section[1]/div/section[2]/div')
                 carregar_mais_display=carregar_mais_display.value_of_css_property('display')
 
 
@@ -54,15 +54,15 @@ class EstadaoCrawler:
         indice = 0
 
         for noticia in noticias:
+            try:
+                self.lista_de_links[noticia.get_attribute('href')] = datas[indice].get_attribute('textContent')
+                print(noticia.get_attribute('href'))
+                #print(self.driver.find_element(By.CLASS_NAME,'data-posts').get_attribute('textContent'))
 
-            self.lista_de_links[noticia.get_attribute('href')] = datas[indice].get_attribute('textContent')
-            print(noticia.get_attribute('href'))
-            #print(self.driver.find_element(By.CLASS_NAME,'data-posts').get_attribute('textContent'))
+                indice += 1
+            except:
+                 self.driver.quit()
 
-            indice += 1
-
-
-        self.driver.quit()
 
     def RasparNoticias(self):
 
@@ -72,9 +72,12 @@ class EstadaoCrawler:
         self.driver = Firefox(options=op)
 
         for link in self.lista_de_links:
+            try:
+                self.driver.get(link)
+                self.CriarArquivo(link)
+            except:
+                pass
 
-            self.driver.get(link)
-            self.CriarArquivo(link)
         self.driver.quit()
     
     def CriarArquivo(self, link):
@@ -105,16 +108,18 @@ class EstadaoCrawler:
             texto = texto + "{}\n".format(paragrafo.get_attribute('textContent'))
 
 
-        arquivo = open('{}.txt'.format(titulo),'w')
-        arquivo.write(texto)
-        arquivo.close
-
+        try:
+            arquivo = open('{}.txt'.format(titulo),'w+', encoding="utf-8")
+            arquivo.write(texto)
+            arquivo.close
+        except:
+            pass
         
 
 
     def FormatarData(self, data):
 
-        data = '18 de dezembro de 2019 | 06h00'
+        #data = '18 de dezembro de 2019 | 06h00'
 
         meses = {
         'janeiro' : '01',
